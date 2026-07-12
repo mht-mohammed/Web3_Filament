@@ -51,7 +51,7 @@ class PostForm
                           ->description("Configure the meta information for the post")
                           ->schema([
                               TagsInput::make('tags'),
-                              Checkbox::make('is_published'),
+                              Checkbox::make('published'),
                               DatePicker::make('published_at'),
                           ]),
 
