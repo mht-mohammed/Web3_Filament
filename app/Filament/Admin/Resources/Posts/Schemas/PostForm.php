@@ -10,6 +10,9 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Components\Group;
+
+use function Laravel\Prompts\select;
+
 class PostForm
 
 {
@@ -29,7 +32,9 @@ class PostForm
                     ]),
                        Select::make('category_id')->rule('required')
                        ->label('Category')
-                       ->options(Category::all()->pluck('name', 'id')),
+                    //    ->options(Category::all()->pluck('name', 'id')),
+                        ->relationship("category" , "name")
+                        ->searchable(),
                        ColorPicker::make('color'),
                     ])->columns(2),
                        // RichEditor::make('body'),
@@ -50,7 +55,9 @@ class PostForm
                           Section::make("meta")
                           ->description("Configure the meta information for the post")
                           ->schema([
-                              TagsInput::make('tags'),
+                              Select::make('tags')
+                                    ->relationship("tags" , "name")
+                                    ->multiple(),
                               Checkbox::make('published'),
                               DatePicker::make('published_at'),
                           ]),

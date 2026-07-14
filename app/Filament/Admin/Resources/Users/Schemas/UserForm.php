@@ -3,16 +3,64 @@
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
+
 class UserForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                TextInput::make('name'),
-                TextInput::make('email'),   
-                TextInput::make('password')->password()   
+
+                Section::make("Basic")
+                    ->schema([
+                        TextInput::make('name'),
+                        TextInput::make('email'),
+                        TextInput::make('password')->password(),
+                    ]),
+                Section::make("Location")
+                    ->schema([
+                        Select::make("country_id")
+                            ->label("Country")
+                            ->options(Country::pluck("name", "id"))
+                            ->reactive()
+                            ->afterStateUpdated(function($state,callable $set){
+                                $set("state_id",null);
+                                $set("city_id",null);
+                            }),
+                        Select::make("state_id")
+                            ->label("State")
+                            ->options(function (callable $get) {
+                                $country = $get("country_id");
+                                if (!$country) {
+                                    return [];
+                                } else {
+                                    return State::whereCountryId($country)
+                                        ->pluck("name", "id");
+                                }
+                            })
+                            ->reactive()
+                                ->afterStateUpdated(function($state,callable $set){
+                                $set("city_id",null);
+                            }),
+                        Select::make("City_id")
+                            ->label("City")
+                            ->options(function (callable $get) {
+                                $state = $get("state_id");
+                                if (!$state) {
+                                    return [];
+                                } else {
+                                    return City::whereStateId($state)
+                                        ->pluck("name", "id");
+                                }
+                            })
+                            ->reactive()
+                    ])
 
             ]);
     }
