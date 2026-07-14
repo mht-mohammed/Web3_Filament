@@ -22,6 +22,10 @@ class CitiesResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static string|\UnitEnum|null $navigationGroup = "Locations";
+
+    protected static ?int $navigationSort = 1;
+
     public static function form(Schema $schema): Schema
     {
         return CitiesForm::configure($schema);
