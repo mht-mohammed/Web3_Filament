@@ -48,7 +48,7 @@ class UserForm
                                 ->afterStateUpdated(function($state,callable $set){
                                 $set("city_id",null);
                             }),
-                        Select::make("City_id")
+                        Select::make("city_id")
                             ->label("City")
                             ->options(function (callable $get) {
                                 $state = $get("state_id");
