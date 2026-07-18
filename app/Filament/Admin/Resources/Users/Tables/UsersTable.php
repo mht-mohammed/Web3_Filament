@@ -19,6 +19,7 @@ class UsersTable
                 TextColumn::make('city.name'),
                 TextColumn::make('state.name'),
                 TextColumn::make('country.name'),
+                TextColumn::make('created_at'),
             ])
             ->filters([
                 //

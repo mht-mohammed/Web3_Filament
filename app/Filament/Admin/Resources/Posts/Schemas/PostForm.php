@@ -3,13 +3,17 @@
 namespace App\Filament\Admin\Resources\Posts\Schemas;
 
 use Illuminate\Mail\Markdown;
+use Illuminate\Support\Str;
 
 use App\Models\Category;
+use App\Models\Post as ModelsPost;
 use Filament\Forms\Components\{Checkbox, ColorPicker, DatePicker, FileUpload, Markdowneditor, RichEditor, Select, TagsInput, TextInput};
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 
 use function Laravel\Prompts\select;
 
@@ -26,7 +30,14 @@ class PostForm
                 ->schema([
                     Group::make()
                     ->schema([
-                       TextInput::make('title')->rules(['required', 'min:3', 'max:50']),   /* TextInput::make('title')->rules("required | min:3 | max:50"),*/
+                       TextInput::make('title')->rules(['required', 'min:3', 'max:50'])
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function(string $operation, string $state, Set $set, Get $get , PostForm $post){
+                            //  dd($operation, $state);
+                            $set("slug", Str::slug($state));
+                            // dd($get("category_id"));
+                            // dd($post);
+                        }),   /* TextInput::make('title')->rules("required | min:3 | max:50"),*/
                        TextInput::make('slug')->unique(ignoreRecord: false)->validationMessages([
                         'unique' => 'The slug must be unique.',
                     ]),

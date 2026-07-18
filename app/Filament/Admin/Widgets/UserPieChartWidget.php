@@ -6,24 +6,32 @@ use Filament\Widgets\ChartWidget;
 use App\Models\User;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use Illuminate\Database\Eloquent\Builder;
+
 class UserPieChartWidget extends ChartWidget
 {
+    use InteractsWithPageFilters;
 
     protected ?string $heading = 'User Pie Chart Widget';  
 
-    protected static ?int $sort = 3 ; 
-
+    protected static ?int $sort = 3; 
 
     protected function getData(): array
     {
+        $startDate = $this->pageFilters['startDate'] ?? null;
+        $endDate = $this->pageFilters['endDate'] ?? null;
 
-            $data = Trend::model(User::class)
-                    ->between(
-                        start: now()->startOfYear(),
-                        end: now()->endOfYear(),
-                    )
-                    ->perMonth()
-                    ->count();
+        $start = $startDate ? now()->parse($startDate)->startOfDay() : now()->startOfYear();
+        $end = $endDate ? now()->parse($endDate)->endOfDay() : now()->endOfYear();
+
+        $data = Trend::model(User::class)
+                ->between(
+                    start: $start,
+                    end: $end,
+                )
+                ->perMonth()
+                ->count();
 
         return [
             'datasets' => [

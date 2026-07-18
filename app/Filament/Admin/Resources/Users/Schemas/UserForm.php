@@ -21,7 +21,7 @@ class UserForm
                     ->schema([
                         TextInput::make('name'),
                         TextInput::make('email'),
-                        TextInput::make('password')->password(),
+                        TextInput::make('password')->password()->nullable()->dehydrated(fn ($state) => filled($state)),
                     ]),
                 Section::make("Location")
                     ->schema([

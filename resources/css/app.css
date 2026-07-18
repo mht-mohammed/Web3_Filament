@@ -9,3 +9,19 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.fi-wi-stats-overview-stat-chart {
+    display: none !important;
+}
+
+.stat-success {
+    border-bottom: 3px solid #10b981 !important;
+}
+
+.stat-info {
+    border-bottom: 3px solid #3b82f6 !important;
+}
+
+.stat-warning {
+    border-bottom: 3px solid #f59e0b !important;
+}

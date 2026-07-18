@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,8 +12,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+use Filament\Support\Fonts\GoogleFont\GoogleFontProvider;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -26,10 +27,17 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
+            ->font('Roboto Mono')
+            ->brandLogo(new \Illuminate\Support\HtmlString(
+                '<div style="display:flex;align-items:center;gap:0.75rem;"><img src="' . asset('images/m1.png') . '" style="height:2.5rem;width:auto;border-radius:0.5rem;" alt="Logo"><span style="color:#ffffff;font-size:1rem;font-weight:700;letter-spacing:-0.01em;">Admin Panel</span></div>'
+            ))
+            ->favicon(asset('images/m2.jpg'))
+            ->darkMode(false)
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
@@ -49,11 +57,15 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                'role:admin'
-
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->profile()
+            ->multiFactorAuthentication([
+                AppAuthentication::make(),
+                EmailAuthentication::make()
+            ])
+            ->databaseNotifications();
     }
 }

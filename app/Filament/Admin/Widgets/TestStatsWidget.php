@@ -2,9 +2,8 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Models\Post;
-use App\Models\Product;
 use App\Models\User;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -18,6 +17,22 @@ class TestStatsWidget extends StatsOverviewWidget
 
     use InteractsWithPageFilters;
 
+    private function getChartData(Builder $query): array
+    {
+        $data = $query
+            ->selectRaw("MONTH(created_at) as month, COUNT(*) as count")
+            ->groupBy("month")
+            ->orderBy("month")
+            ->pluck("count", "month")
+            ->toArray();
+
+        $padded = array_fill(1, 12, 0);
+        foreach ($data as $month => $count) {
+            $padded[(int) $month] = $count;
+        }
+
+        return array_values($padded);
+    }
 
     protected function getStats(): array
     {
@@ -25,49 +40,37 @@ class TestStatsWidget extends StatsOverviewWidget
         $startDate = $this->pageFilters['startDate'] ?? null;
         $endDate = $this->pageFilters['endDate'] ?? null;
 
+        $userQuery = User::query()
+            ->when($startDate, fn (Builder $q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn (Builder $q) => $q->whereDate('created_at', '<=', $endDate));
+
+        $palestineQuery = User::whereHas('country', fn (Builder $q) => $q->where('name', 'Palestine'))
+            ->when($startDate, fn (Builder $q) => $q->whereDate('users.created_at', '>=', $startDate))
+            ->when($endDate, fn (Builder $q) => $q->whereDate('users.created_at', '<=', $endDate));
+
+        $egyptQuery = User::whereHas('country', fn (Builder $q) => $q->where('name', 'Egypt'))
+            ->when($startDate, fn (Builder $q) => $q->whereDate('users.created_at', '>=', $startDate))
+            ->when($endDate, fn (Builder $q) => $q->whereDate('users.created_at', '<=', $endDate));
+
         return [
-            Stat::make("Total Users", User::query()
-                    ->when($startDate, fn (Builder $query) => $query->whereDate('created_at', '>=', $startDate))
-                    ->when($endDate, fn (Builder $query) => $query->whereDate('created_at', '<=', $endDate))
-                    ->count(),)
-                ->description("Total number of users of this year")
-                // ->chart([
-                //     2,4,6,7,15,15,17
-                // ])
-                ->chart(
-                    User::selectRaw("MONTH(created_at) as month, COUNT(*) as count")
-                        ->whereYear("created_at", now()->year)
-                        ->groupBy("month")
-                        ->orderBy("month")
-                        ->pluck("count")
-                        ->toArray()
-                )
+            Stat::make("Total Users", $userQuery->count())
+                ->description("Total number of users")
+                ->descriptionIcon(Heroicon::ArrowTrendingUp)
+                ->chart($this->getChartData(clone $userQuery))
                 ->descriptionColor("success")
                 ->color("success"),
-            Stat::make("Total Posts", Post::count("id"))
-                ->description("Total number of posts of this year")
-                ->chart(
-                    Post::selectRaw("MONTH(created_at) as month, COUNT(*) as count")
-                        ->whereYear("created_at", now()->year)
-                        ->groupBy("month")
-                        ->orderBy("month")
-                        ->pluck("count")
-                        ->toArray()
-                )
+            Stat::make("Total Users From Palestine", $palestineQuery->count())
+                ->description("Users located in Palestine")
+                ->descriptionIcon(Heroicon::ArrowTrendingUp)
+                ->chart($this->getChartData(clone $palestineQuery))
+                ->descriptionColor("info")
+                ->color("info"),
+            Stat::make("Total Users From Egypt", $egyptQuery->count())
+                ->description("Users located in Egypt")
+                ->descriptionIcon(Heroicon::ArrowTrendingUp)
+                ->chart($this->getChartData(clone $egyptQuery))
                 ->descriptionColor("warning")
                 ->color("warning"),
-            Stat::make("Total Products", Product::count("id"))
-                ->description("Total number of products of this year")
-                ->chart(
-                    Product::selectRaw("MONTH(created_at) as month, COUNT(*) as count")
-                        ->whereYear("created_at", now()->year)
-                        ->groupBy("month")
-                        ->orderBy("month")
-                        ->pluck("count")
-                        ->toArray()
-                )
-                ->descriptionColor("info")
-                ->color("info")
         ];
     }
 }

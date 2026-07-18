@@ -3,12 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Override;
 
-class User extends Authenticatable
+
+#[ObservedBy(UserObserver::class)]
+class User extends Authenticatable implements HasAppAuthentication, HasEmailAuthentication
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -25,7 +33,8 @@ class User extends Authenticatable
         'country_id',
         'state_id',
         'city_id',
-        'type'
+        'type',
+        'app_authentication_secret'
     ];
 
     /**
@@ -48,6 +57,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'app_authentication_secret' => 'encrypted', 
+            'has_email_authentication' => 'boolean',
         ];
     }
 
@@ -68,5 +79,32 @@ class User extends Authenticatable
     }
     public function IsUser(){
         return $this->type ==="user";
+    }
+
+    public function hasEmailAuthentication(): bool
+    {
+        return $this->has_email_authentication ?? false;
+    }
+
+    public function toggleEmailAuthentication(bool $condition): void
+    {
+        $this->has_email_authentication = $condition;
+        $this->save();
+    }
+
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(?string $secret): void
+    {
+        $this->app_authentication_secret = $secret;
+        $this->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
     }
 }
